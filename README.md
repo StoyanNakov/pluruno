@@ -8,6 +8,8 @@ Pluruno is an experimental open research project for **heterogeneous distributed
 >
 > Pluruno is **not yet a production public network** and is not ready for untrusted Internet peers.
 
+**License:** [GNU Affero General Public License v3.0 only (AGPL-3.0-only)](LICENSE)
+
 ## Why Pluruno exists
 
 Most distributed inference systems assume either a homogeneous cluster or a relatively fixed deployment shape. Pluruno is exploring a different model:
@@ -144,4 +146,4 @@ Pluruno is currently an **experimental research prototype**. Interfaces, protoco
 
 ## Licensing
 
-A public license has **not yet been selected**. The repository is being published documentation-first while the licensing model is decided.
+Pluruno is licensed under the **GNU Affero General Public License v3.0 only** (`AGPL-3.0-only`). See [LICENSE](LICENSE).
