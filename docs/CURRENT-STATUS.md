@@ -1,105 +1,98 @@
 # Current Status
 
-_Last updated: 2026-08-21_
+_Last updated: 2026-08-24_
 
-Pluruno is currently an **experimental heterogeneous distributed AI execution prototype**.
+Pluruno is an **experimental heterogeneous distributed AI execution platform**. The current controlled-lab proof path uses `allenai/OLMoE-1B-7B-0125-Instruct` to validate distributed MoE execution, heterogeneous role placement, failure handling, and participant/runtime architecture.
 
-The current proof path uses `allenai/OLMoE-1B-7B-0125-Instruct` to validate distributed execution semantics and topology behavior. The project architecture is intended to become manifest-driven and multi-model rather than remain tied to this model.
+Pluruno is **not yet a production public Internet network**.
 
-## Accepted experimental phases
+## Current maturity
 
-### T0 — frozen baseline
+| Area | Status |
+|---|---|
+| Distributed MoE execution | **PROVEN** |
+| Remote expert execution | **PROVEN** |
+| Exact-replica failover | **PROVEN** |
+| Session Executor | **PROVEN** |
+| Expert Node / Expert Group / Block Node | **PROVEN** |
+| Protocol v2 | **PROVEN** |
+| Capability-aware scheduling | **PROVEN FOUNDATION** |
+| Authoritative Control Plane | **PROVEN** |
+| Desired-state reconciliation | **PROVEN** |
+| Linux OCI participant runtime | **PROVEN on current lab nodes** |
+| Automatic participant onboarding | **UNDER DEVELOPMENT** |
+| Measured qualification | **UNDER DEVELOPMENT** |
+| Universal participant package | **NOT YET ACCEPTED** |
+| WAN / public community network | **NOT READY** |
+| Windows participant | **DEFERRED** |
+| macOS participant | **PLANNED** |
+| AMD production support | **NOT YET IMPLEMENTED** |
+| Credits / tokens | **NOT YET IMPLEMENTED** |
+| HA Control Plane | **NOT YET IMPLEMENTED** |
 
-Established the initial distributed inference control and correctness baseline.
+## What has been demonstrated
 
-### T1 — accepted
+The controlled Linux lab has demonstrated:
 
-Separated the Global Control Plane from the Session / Model Executor hot path.
+- pretrained MoE experts executing remotely on other physical machines;
+- a full 16-layer forward using remote experts;
+- autoregressive generation using distributed expert execution;
+- single-expert numerical correctness with observed difference below `1e-6`;
+- exact-replica failover while preserving the requested logical expert;
+- multiple independent Session Executors under one control-plane architecture;
+- Expert Node, Expert Group, and stateful multi-layer Block Node execution;
+- capability-aware role selection and scheduler observability;
+- participant desired-state and reconciliation semantics;
+- an authoritative Control Plane separated from the inference hot path;
+- OCI/container migration of three Linux workers;
+- six-GPU OCI shadow parity on a fourth heterogeneous worker, with **2048/2048 exact parity checks**.
 
-A controlled comparison showed that moving session/model execution off the weak control-plane CPU improved measured throughput from **1.797 tok/s to 3.379 tok/s**, an approximately **88% increase** in that experiment while preserving exact output.
+These are experimental lab results, not production performance guarantees.
 
-### T2 — fully accepted
+## Selected experimental measurements
 
-Demonstrated the broader distributed execution topology:
+| Experiment | Result |
+|---|---:|
+| Early centralized control/executor baseline | 1.797 tok/s |
+| Session Executor moved off the weak control-plane CPU | 3.379 tok/s |
+| Improvement in that controlled comparison | +88.0% throughput |
+| Concurrent execution domain A | 5.643 tok/s |
+| Concurrent execution domain B | 8.263 tok/s |
 
-- two independent Session Executors under one control-plane concept;
-- simultaneous exact sessions;
-- distributed exact Expert Groups across several peers;
-- local expert co-location;
-- execution-domain failure isolation;
-- preservation of exact replica behavior;
-- topology/role observability.
+Protocol v2 transport experiments also measured an FP16 baseline of approximately **1.904 tok/s**. A Q8_0 transport experiment reached approximately **1.777 tok/s** in the measured run, so FP16 remains the current default while lossy transport remains opt-in research.
 
-In the concurrent-domain experiment, measured throughput was:
+## Correctness rule
 
-- Domain A: **5.643 tok/s**
-- Domain B: **8.263 tok/s**
+In strict pretrained-model execution, the model's native router/gate remains authoritative about **which logical expert** is required. Pluruno decides **which exact physical replica** executes that expert.
 
-These are lab measurements, not production performance guarantees.
+A failed physical replica therefore does not justify silently substituting a different logical expert.
 
-### T3 — fully accepted
+## Heterogeneous execution
 
-T3 validated heterogeneous, capability-driven execution roles.
+Pluruno does not assume identical peers. The lab intentionally includes different CPU/GPU capacities and materially different network links, including a worker constrained to roughly 100 Mb/s while other paths are around 1 Gb/s.
 
-Accepted sub-phases include:
+This is important to the project: role placement and scheduling should be based on measured capability, topology, locality, and workload rather than assuming a homogeneous cluster.
 
-- **T3-A:** single exact Expert Node;
-- **T3-B:** fine-grained multi-expert packing and one-GPU vs two-GPU packing;
-- **T3-C:** capability-aware role promotion with selected/rejected decision explanations;
-- **T3-D:** measured spillover-candidate comparison;
-- **T3-E:** exact layer / DynamicCache / KV Block Node execution contract;
-- **T3-F:** first real stateful multi-layer Block Node with exact boundary equivalence;
-- **T3-G:** exact 1/2/4/8-layer Block Node sizing envelope;
-- **T3-H:** objective-aware scheduler/topology observability in the production dashboard/API layer.
+## Linux OCI progress
 
-The current scheduler evidence shows that the best deployment can depend on the objective. For example, one measured Block Node configuration was advantageous for short/TTFT and bandwidth-locality objectives, while ordinary Expert Group execution remained preferable for decode-throughput objectives.
+The Linux participant/runtime migration has progressed through accepted OCI paths on worker1, worker2, and worker3. A six-GPU fourth worker has also passed protected-baseline, rootless GPU-path, and six-GPU shadow-parity stages.
 
-## What is proven today
-
-- pretrained MoE experts can execute remotely on other physical machines;
-- exact experts can be distributed across multiple peers;
-- the model-native top-k decision remains authoritative in strict mode;
-- Pluruno can choose among identical physical replicas without changing logical expert identity;
-- request-level same-activation retry works after an in-flight replica failure;
-- multiple independent execution domains can coexist;
-- peers can carry multiple simultaneous roles;
-- fine-grained Expert Nodes and larger Expert Groups both work;
-- stateful multi-layer Block Node execution works;
-- scheduler choices can be driven by measured capability and topology;
-- selected and rejected scheduler candidates can be exposed for operator inspection.
+The remaining work on that worker is intentionally gated on the generic participant/onboarding path rather than being completed with a machine-specific workaround.
 
 ## What is not yet claimed
 
 Pluruno does **not** currently claim:
 
-- a production public Internet network;
-- safe execution with arbitrary untrusted peers;
-- production Windows participation;
-- automatic cross-region session migration;
-- production multi-model manifests;
-- a completed credit or token economy;
-- blockchain integration;
-- production-grade reputation or malicious-worker detection.
+- production readiness for arbitrary public Internet peers;
+- a completed universal installer/participant package;
+- production WAN/NAT/relay operation;
+- production Windows or macOS participation;
+- production AMD accelerator support;
+- a completed credit/token/reputation economy;
+- active-active highly available control-plane operation.
 
-## Next phase: T4
+## Development principle
 
-The next major phase is **Windows + Linux mixed-swarm onboarding**.
+A terminal `PASS` is not by itself treated as project acceptance. Accepted work is reviewed against evidence, invariants, rollback behavior, and publication safety before being treated as proven.
 
-The first step is discovery and qualification of the Windows peers before choosing a runtime strategy. The project will compare native Windows, WSL2, and container-based participation using real hardware/network evidence rather than assuming one path in advance.
-
-The initial T4 work includes:
-
-- persistent peer identity;
-- GPU inventory and qualification;
-- CPU/RAM capability;
-- measured network capability;
-- management/deployment path;
-- artifact retrieval;
-- role assignment;
-- mixed-OS inference;
-- heartbeat and recovery;
-- dashboard visibility.
-
-## After T4
-
-Later validation will focus on WAN-like conditions, including controlled latency, bandwidth constraints, jitter, loss, stragglers, and peer disappearance, followed by the security work required before public peers are allowed.
+The repository will continue to publish completed, reviewable engineering results as they are accepted rather than presenting planned work as finished.
